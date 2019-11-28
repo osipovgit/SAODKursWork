@@ -10,7 +10,7 @@ struct record {
     char date[10];
 };
 
-struct queue_q{
+struct queue_q {
   	record *q;
   	queue_q *next;
 };
@@ -25,20 +25,20 @@ bool Rost = true;
 bool Ymen = true;
 bool HR = false, VR = false;
 
-inline bool key2(int q, int l, record** ind){
-		if(strcmp(ind[q]->fio, ind[l]->fio) >= 0)
-			return true;
-		else if(strcmp(ind[q]->fio, ind[l]->fio) < 0)
-			return false;
+inline bool key2(int q, int l, record** ind) {
+	if(strcmp(ind[q]->fio, ind[l]->fio) >= 0)
+		return true;
+	else if(strcmp(ind[q]->fio, ind[l]->fio) < 0)
+		return false;
 }
 
-inline bool key(int q, int l, record** ind){
-		if(ind[q]->date[0] > ind[l]->date[0] ||(ind[q]->date[0] == ind[l]->date[0] && ind[q]->date[1] > ind[l]->date[1]))
-			return true;
-		else if(ind[q]->date[0] == ind[l]->date[0] && ind[q]->date[1] == ind[l]->date[1])
-			return key2(q, l, ind);
-		else
-			 return false;
+inline bool key(int q, int l, record** ind) {
+	if(ind[q]->date[0] > ind[l]->date[0] ||(ind[q]->date[0] == ind[l]->date[0] && ind[q]->date[1] > ind[l]->date[1]))
+		return true;
+	else if(ind[q]->date[0] == ind[l]->date[0] && ind[q]->date[1] == ind[l]->date[1])
+		return key2(q, l, ind);
+	else
+		return false;
 }
 
 inline void heapPostr (record** ind, int l, int r) {
@@ -68,139 +68,116 @@ inline void heapSort (record** ind, int n) {
 	}
 }
 
-inline int search_less(record** ind, string key, int M){
+inline int search_less(record** ind, string key, int M) {
 	string s = key;
-	for(int i = 0; i < 2; ++i){
-		s[i] = ind[M]->date[i]; 
-	}
-	if(key < s) return -1;
-	else if(key > s) return 1;
-	else if (key == s)return 0;
+	for(int i = 0; i < 2; ++i)
+		s[i] = ind[M]->date[i];
+	if(key < s) 
+		return -1;
+	else if(key > s) 
+		return 1;
+	else if (key == s)
+		return 0;
 }
-inline int binsearch(record** ind, string key, int L, int R){
+
+inline int binsearch(record** ind, string key, int L, int R) {
 	int M;
 	while(L < R){
 		M = (L + R) >> 1;
-		if(search_less(ind, key, M) <= 0){
+		if(search_less(ind, key, M) <= 0)
 			R = M;
-		}else{
+		else
 			L = M + 1;
-		}
 	}
-	if(search_less(ind, key, L) == 0){
+	if(search_less(ind, key, L) == 0)
 		return L;
-	}else{
+	else
 		return -1;
-	}
 }
 
-inline int ochered_less(string& key, record** ind, int& t){
-	string p = key;
-	for(int i = 0; i < 2; ++i){
-		p[i] = ind[t]->date[i];
-	}
-	if(key < p) return -1;
-	else if(key > p) return 1;
-	else if (key == p)return 0;
+inline void B2insert(record* D, Vertex *&p) {
+    if (p == NULL) {
+        p = new Vertex;
+        p->data = D;
+        p->left = p->right = NULL;
+        p->Balance = 0;
+        VR = true;
+    } else {
+        if (D < p->data) {
+            B2insert(D, p->left);
+            if (VR) {
+                if (p->Balance == 0) {
+                    Vertex *q = NULL;
+                    q = p->left;
+                    p->left = q->right;
+                    q->right = p;
+                    p = q;
+                    q->Balance = 1;
+                    VR = true;
+                    HR = false;
+                } else {
+                    p->Balance = 0;
+                    VR = true;
+                    HR = false;
+                }
+            } else
+                HR = false;
+        } else {
+            if (D > p->data) {
+                B2insert(D, p->right);
+                if (VR) {
+                    p->Balance = 1;
+                    HR = true;
+                    VR = false;
+                } else {
+                    if (HR) {
+                        if (p->Balance == 1) {
+                            Vertex *q = NULL;
+                            q = p->right;
+                            p->Balance = 0;
+                            q->Balance = 0;
+                            p->right = q->left;
+                            q->left = p;
+                            p = q;
+                            VR = true;
+                            HR = false;
+                        } else {
+                            HR = false;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
-inline void ocered(queue_q*& p, int t, record** ind){
-	if(!p){
+void ocered(queue_q*& p, int t, record** ind, Vertex *&DBD) {
+	if(!p) {
 		p = new queue_q;
 		p->q = ind[t];
+		B2insert(p->q, DBD);
 		p->next = NULL;
 	}
 	else
-		ocered(p->next, t, ind);
+		ocered(p->next, t, ind, DBD);
 }
 
-//void addVertex(Vertex *&Tree, spis *head) {
-//	//cout<<"YA PRISHOL DOBAVLAT!"<<endl;
-//	spis *p = new spis;
-//	p = head;
-//	//cout<< setw(4)<<p->weight<< setw(4)<<p->sps->name<<setw(4)<<p->sps->st_name<<setw(4)<<p->sps->house<<setw(4)<<p->sps->apts<<setw(10)<<p->sps->date<<endl;
-//	if(Tree) {
-//		if(p->sps->house < Tree->a->house) 
-//			addVertex(Tree->left, p);
-//		else if(p->sps->house > Tree->a->house)
-//			addVertex(Tree->right, p);
-//		else if(p->sps->house == Tree->a->house)
-//			addVertex(Tree->same, p);
-//		else
-//			return;
-//	}else{
-//		Tree = new Vertex;
-//		Tree->left = Tree->right = Tree->same = NULL;
-//		Tree->a = p->sps;
-//		cout << u << ") " << setw(4) << setw(4) << Tree->a->name << setw(4) << Tree->a->st_name << setw(4)<<Tree->a->house<<setw(4)<<Tree->a->apts<<setw(10)<<Tree->a->date<<endl;
-//		Tree->weight = p->weight;
-//	}
-//}
-//
-//inline void B2insert(int D, Vertex *&p) {
-//    if (p == NULL) {
-//        p = new Vertex;
-//        p->data = D;
-//        p->left = p->right = NULL;
-//        p->Balance = 0;
-//        VR = true;
-//    } else {
-//        if (D < p->data) {
-//            B2insert(D, p->left);
-//            if (VR) {
-//                if (p->Balance == 0) {
-//                    Vertex *q = NULL;
-//                    q = p->left;
-//                    p->left = q->right;
-//                    q->right = p;
-//                    p = q;
-//                    q->Balance = 1;
-//                    VR = true;
-//                    HR = false;
-//                } else {
-//                    p->Balance = 0;
-//                    VR = true;
-//                    HR = false;
-//                }
-//            } else
-//                HR = false;
-//        } else {
-//            if (D > p->data) {
-//                B2insert(D, p->right);
-//                if (VR) {
-//                    p->Balance = 1;
-//                    HR = true;
-//                    VR = false;
-//                } else {
-//                    if (HR) {
-//                        if (p->Balance == 1) {
-//                            Vertex *q = NULL;
-//                            q = p->right;
-//                            p->Balance = 0;
-//                            q->Balance = 0;
-//                            p->right = q->left;
-//                            q->left = p;
-//                            p = q;
-//                            VR = true;
-//                            HR = false;
-//                        } else {
-//                            HR = false;
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
-void Obhod(queue_q *&p, int i) {
+void Obhod(Vertex *p, int i) {
 	if(p){
-		cout << setw(4) << ++i << ")" <<setw(30)<< p->q->fio << "  " << setw(3) << p->q->numDep << "  " << setw(22) << p->q->position << "  " << setw(10) << p->q->date << endl;
-		Obhod(p->next, i);
+        Obhod(p->left, i);
+		cout << setw(4) << ++i << ")" <<setw(30)<< p->data->fio << "  " << setw(3) << p->data->numDep << "  " << setw(22) << p->data->position << "  " << setw(10) << p->data->date << endl;
+        Obhod(p->right, i);
 	}
 }
 
-inline void delQue(queue_q*& p){
+void printQueue(queue_q *&p, int i) {
+	if(p){
+		cout << setw(4) << ++i << ")" << setw(30) << p->q->fio << "  " << setw(3) << p->q->numDep << "  " << setw(22) << p->q->position << "  " << setw(10) << p->q->date << endl;
+		printQueue(p->next, i);
+	}
+}
+
+inline void delQueue(queue_q*& p) {
 	queue_q* q;
 	while(p){
 		q = p;
@@ -209,7 +186,7 @@ inline void delQue(queue_q*& p){
 	}
 }
 
-inline void print(record **ind){
+inline void print(record **ind) {
 	bool exitcode;
 	for(int i = 0; i < N; ++i){
 		if(i % 20 == 0 && i != 0){
@@ -227,7 +204,6 @@ int main() {
     FILE *fp = fopen("testBase2.dat", "rb");
     record* mas = new record[N];
 	record** ind = new record*[N];
-//	Vertex *DBD = NULL;
 	for(int i = 0; i < N; ++i)
   		ind[i] = &mas[i];
 	int j = 0, act;
@@ -236,31 +212,39 @@ int main() {
 	cin >> act;
 	if (act == 1)
 		print(ind);
-	if (act == 2){
+	else if (act == 2) {
 		heapSort(ind, N);
 		print(ind);
 	}
-	if (act == 3){
+	else if (act == 3) {
 		heapSort(ind, N);
-		string key;
-		while(1){
+		char key[2];
+		char less[2];
+		//key[2]='\0';
+		while(1) {
   			retry:
   			queue_q *root = NULL;
-  			cin >> key;
-  			if(key == "-+") break;
+			Vertex *DBD = NULL;
+			cout << "Enter date: ";
+  			fflush(stdin);
+			gets(key);
+			if(strcmp(key, "-+") == 0) break;
   			int t = binsearch(ind, key, 0, N - 1);
-  			if(t > -1){
+  			if(t > -1)
   				cout << "First element number is " << t + 1 << endl;
-  			}else{
+  			else {
   				cout << "Element not found. Try again: ";
   				goto retry;
 			}
-			int i;
-			for(i = t; i < t+10; ++i){
-				ocered(root, i, ind);
+			bool lim = true;
+			for (int i = t; i > -1 && i < 4000; ++i) {
+				if(ind[i]->date[1] != key[1])
+					break;
+				ocered(root, i, ind, DBD);
 			}
-			Obhod(root, t);
-			delQue(root);
+			Obhod(DBD, 1);
+//			printQueue(root, t);
+			delQueue(root);
 			delete root;
   		}
 	}
