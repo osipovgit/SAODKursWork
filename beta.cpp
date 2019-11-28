@@ -103,7 +103,7 @@ inline void B2insert(record* D, Vertex *&p) {
         p->Balance = 0;
         VR = true;
     } else {
-        if (D < p->data) {
+        if (strcmp(D->fio, p->data->fio) < 0) {
             B2insert(D, p->left);
             if (VR) {
                 if (p->Balance == 0) {
@@ -123,7 +123,7 @@ inline void B2insert(record* D, Vertex *&p) {
             } else
                 HR = false;
         } else {
-            if (D > p->data) {
+            if (strcmp(D->fio, p->data->fio) >= 0) {
                 B2insert(D, p->right);
                 if (VR) {
                     p->Balance = 1;
@@ -162,11 +162,11 @@ void ocered(queue_q*& p, int t, record** ind, Vertex *&DBD) {
 		ocered(p->next, t, ind, DBD);
 }
 
-void Obhod(Vertex *p, int i) {
+void Obhod(Vertex *p) {
 	if(p){
-        Obhod(p->left, i);
-		cout << setw(4) << ++i << ")" <<setw(30)<< p->data->fio << "  " << setw(3) << p->data->numDep << "  " << setw(22) << p->data->position << "  " << setw(10) << p->data->date << endl;
-        Obhod(p->right, i);
+        Obhod(p->left);
+		cout << setw(30) << p->data->fio << "  " << setw(3) << p->data->numDep << "  " << setw(22) << p->data->position << "  " << setw(10) << p->data->date << endl;
+        Obhod(p->right);
 	}
 }
 
@@ -218,31 +218,32 @@ int main() {
 	}
 	else if (act == 3) {
 		heapSort(ind, N);
-		char key[2];
+		string key;
 		char less[2];
-		//key[2]='\0';
 		while(1) {
   			retry:
   			queue_q *root = NULL;
 			Vertex *DBD = NULL;
 			cout << "Enter date: ";
-  			fflush(stdin);
-			gets(key);
-			if(strcmp(key, "-+") == 0) break;
+//  			fflush(stdin);
+//			gets(key);
+//			if(strcmp(key, "-+") == 0) break;
+			cin >> key;
+  			if(key == "-+") break;
   			int t = binsearch(ind, key, 0, N - 1);
   			if(t > -1)
   				cout << "First element number is " << t + 1 << endl;
   			else {
-  				cout << "Element not found. Try again: ";
+  				cout << "Element not found. ";
   				goto retry;
 			}
 			bool lim = true;
-			for (int i = t; i > -1 && i < 4000; ++i) {
+			for (int a = 0, i = t; i > -1 && i < 4000; ++i) {
 				if(ind[i]->date[1] != key[1])
 					break;
 				ocered(root, i, ind, DBD);
 			}
-			Obhod(DBD, 1);
+			Obhod(DBD);
 //			printQueue(root, t);
 			delQueue(root);
 			delete root;
