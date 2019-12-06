@@ -11,13 +11,13 @@ struct record {
 };
 
 struct queue_q {
-  	record *q;
-  	queue_q *next;
+	record *q;
+	queue_q *next;
 };
 
 struct Vertex {
     record* data;
-    Vertex *left, *right;
+    Vertex *left, *right, *equal, *next;
     int Balance;
 };
 
@@ -33,7 +33,7 @@ inline bool key2(int q, int l, record** ind) {
 }
 
 inline bool key(int q, int l, record** ind) {
-	if(ind[q]->date[0] > ind[l]->date[0] ||(ind[q]->date[0] == ind[l]->date[0] && ind[q]->date[1] > ind[l]->date[1]))
+	if (ind[q]->date[0] > ind[l]->date[0] ||(ind[q]->date[0] == ind[l]->date[0] && ind[q]->date[1] > ind[l]->date[1]))
 		return true;
 	else if(ind[q]->date[0] == ind[l]->date[0] && ind[q]->date[1] == ind[l]->date[1])
 		return key2(q, l, ind);
@@ -82,7 +82,7 @@ inline int search_less(record** ind, string key, int M) {
 
 inline int binsearch(record** ind, string key, int L, int R) {
 	int M;
-	while(L < R){
+	while(L < R) {
 		M = (L + R) >> 1;
 		if(search_less(ind, key, M) <= 0)
 			R = M;
@@ -95,15 +95,20 @@ inline int binsearch(record** ind, string key, int L, int R) {
 		return -1;
 }
 
+int asd = 0;
+
 inline void B2insert(record* D, Vertex *&p) {
     if (p == NULL) {
         p = new Vertex;
         p->data = D;
-        p->left = p->right = NULL;
+        ++asd;
+		p->equal = NULL;
+        p->left = NULL;
+		p->right = NULL;
         p->Balance = 0;
         VR = true;
     } else {
-        if (strcmp(D->fio, p->data->fio) < 0) {
+        if (strcmp(D->date, p->data->date) < 0) {
             B2insert(D, p->left);
             if (VR) {
                 if (p->Balance == 0) {
@@ -122,8 +127,7 @@ inline void B2insert(record* D, Vertex *&p) {
                 }
             } else
                 HR = false;
-        } else {
-            if (strcmp(D->fio, p->data->fio) >= 0) {
+        } else if (strcmp(D->date, p->data->date) > 0) {
                 B2insert(D, p->right);
                 if (VR) {
                     p->Balance = 1;
@@ -146,34 +150,57 @@ inline void B2insert(record* D, Vertex *&p) {
                         }
                     }
                 }
-            }
-        }
+        
+        } else if (strcmp(D->date, p->data->date) == 0)
+                B2insert(D, p->equal);
     }
 }
 
-void ocered(queue_q*& p, int t, record** ind, Vertex *&DBD) {
-	if(!p) {
+void ocered(queue_q*& p, int &t, record** ind, Vertex *&DBD) {
+	if (!p) {
 		p = new queue_q;
 		p->q = ind[t];
 		B2insert(p->q, DBD);
 		p->next = NULL;
-	}
-	else
+	} else
 		ocered(p->next, t, ind, DBD);
 }
 
-void Obhod(Vertex *p) {
-	if(p){
-        Obhod(p->left);
+void Obhod(Vertex *&p) {
+	if (p) {
+		Obhod(p->equal);
+		Obhod(p->left);
 		cout << setw(30) << p->data->fio << "  " << setw(3) << p->data->numDep << "  " << setw(22) << p->data->position << "  " << setw(10) << p->data->date << endl;
         Obhod(p->right);
 	}
 }
 
 void printQueue(queue_q *&p, int i) {
-	if(p){
+	if (p) {
 		cout << setw(4) << ++i << ")" << setw(30) << p->q->fio << "  " << setw(3) << p->q->numDep << "  " << setw(22) << p->q->position << "  " << setw(10) << p->q->date << endl;
 		printQueue(p->next, i);
+	}
+}
+
+void search(Vertex *&p, string &key) {
+	if (p) {
+		if (p->data->date > key)
+			search(p->left, key);
+		else if (p->data->date < key)
+			search(p->right, key);	
+		if (p->data->date[0] == key[0] & p->data->date[1] == key[1] & p->data->date[2] == key[2] & p->data->date[3] == key[3] & p->data->date[4] == key[4] & p->data->date[5] == key[5] & p->data->date[6] == key[6] & p->data->date[7] == key[7]) {
+			search(p->equal, key);
+			cout << setw(30) << p->data->fio << "  " << setw(3) << p->data->numDep << "  " << setw(22) << p->data->position << "  " << setw(10) << p->data->date << endl;
+		}
+	}
+}
+
+void freeTree(Vertex *Tree) {
+	if (Tree) {
+		freeTree(Tree->equal);
+		freeTree(Tree->left);
+		delete Tree;
+		freeTree(Tree->right);
 	}
 }
 
@@ -204,11 +231,11 @@ int main() {
     FILE *fp = fopen("testBase2.dat", "rb");
     record* mas = new record[N];
 	record** ind = new record*[N];
-	for(int i = 0; i < N; ++i)
-  		ind[i] = &mas[i];
-	int j = 0, act;
-	j = fread((record*)mas, sizeof(record), N, fp);
+	for (int i = 0; i < N; ++i)
+		ind[i] = &mas[i];
+	auto j = fread((record*)mas, sizeof(record), N, fp);
 	cout << "Choose:" << endl << "1) Print" << endl <<"2) Sort" << endl << "3) Key" << endl << ">> ";
+	int act;
 	cin >> act;
 	if (act == 1)
 		print(ind);
@@ -219,40 +246,41 @@ int main() {
 	else if (act == 3) {
 		heapSort(ind, N);
 		string key;
-		char less[2];
 		while(1) {
   			retry:
   			queue_q *root = NULL;
 			Vertex *DBD = NULL;
 			cout << "Enter date: ";
-//  			fflush(stdin);
-//			gets(key);
-//			if(strcmp(key, "-+") == 0) break;
 			cin >> key;
-  			if(key == "-+") break;
+  			if (key == "-+")
+				break;
   			int t = binsearch(ind, key, 0, N - 1);
-  			if(t > -1)
+  			if (t > -1)
   				cout << "First element number is " << t + 1 << endl;
   			else {
   				cout << "Element not found. ";
   				goto retry;
 			}
-			bool lim = true;
+			asd = 0;
 			for (int a = 0, i = t; i > -1 && i < 4000; ++i) {
 				if(ind[i]->date[1] != key[1])
 					break;
 				ocered(root, i, ind, DBD);
 			}
 			Obhod(DBD);
+			cout << "->" << asd << "<-" << endl;
 //			printQueue(root, t);
+			while (1) {
+				string key;
+				cout << "Enter search key: ";
+				cin >> key;
+				if (key[0] == '-')
+					break;
+				search(DBD, key);
+			}
+			freeTree(DBD);
 			delQueue(root);
 			delete root;
   		}
 	}
 }
-
-/*	for(int i = t; ochered_less(key, ind, i) == 0; ++i){
-		cout << setw(4) << i + 1 << ")" << setw(30)<< ind[i]->fio << "  " << setw(3) << ind[i]->numDep << "  " << setw(22) << ind[i]->position << "  " << setw(10) << ind[i]->date << endl;
-		++kol;
-	}
-	cout << "Amount of element: " << kol << endl;*/
