@@ -21,6 +21,12 @@ struct Vertex {
     int Balance;
 };
 
+typedef pair<char, double> data_t;
+
+bool second_less(const data_t& d1, const data_t& d2) {
+ return d1.second < d2.second;
+}
+
 bool Rost = true;
 bool Ymen = true;
 bool HR = false, VR = false;
@@ -225,6 +231,132 @@ inline void print(record **ind) {
 		cout << setw(4) << i + 1 << ")" << setw(30)<< ind[i]->fio << "  " << setw(3) << ind[i]->numDep << "  " << setw(22) << ind[i]->position << "  " << setw(10) << ind[i]->date << endl;
 	}
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+int Mediana(int L, int R, vector<data_t> &P) {
+	double Sl = 0;
+	for (int i = L; i < R; ++i)
+		Sl += P[i].second;
+	double Sr = P[R].second;
+	int m = R;
+	while (Sl >= Sr) {
+		--m;
+		Sl -= P[m].second;
+		Sr += P[m].second;
+	}
+	return m;
+}
+
+void Fano(int L, int R, int k, vector<data_t> &P, char **C, int *lenght) {
+	if (L < R) {
+		++k;
+		int m = Mediana(L, R, P);
+		for (int i = L; i <= R; ++i) {
+			if (i <= m) {
+				C[i][k] = 0 + '0'; 
+				lenght[i]++;
+			} else {
+				C[i][k] = 1 + '0'; 
+				lenght[i]++;
+			}
+		}
+		Fano(L, m, k, P, C, lenght);
+		Fano(m + 1, R, k, P, C, lenght);
+	}
+}
+
+void ReadBase(vector<data_t> &P_Vect){
+	FILE *Base;
+	
+	map<char, double> DigitP;
+	auto Found = DigitP.begin();
+	char str;
+	unsigned short int digit;
+	Base = fopen("testBase2.dat", "rb");
+	if (Base == NULL) {
+		cout << endl << "!!!  Error open base  !!!" << endl;
+		exit(1); 
+	} else cout << endl << ">>> File base is OPEN <<<" << endl;
+	int count = 0;
+	int count_struct = -1;
+	while (!feof(Base)) {
+		++count_struct;
+	
+		for (count = 0; count < 64; ++count) {
+			fread(&str, sizeof(char), 1, Base);
+			Found = DigitP.find(str);
+			if (Found == DigitP.end())
+				DigitP.insert(pair<char,int>(str,1));
+			else 
+				(*Found).second++;
+		}
+	}
+
+	
+	double sum = 0;
+//	DigitP.erase(' ');
+//	DigitP.erase('\0');
+	
+	for (auto it = DigitP.begin(); it != DigitP.end(); ++it){
+//		cout << (*it).first << " ";
+		sum += (*it).second;
+	}
+	cout << endl << "Number of characters in DataBase:  " << sum;
+	cout << endl << "Number of structures read:  " << count_struct;
+	double P_multipl = 1 / (double)sum;
+	double control = 0;
+	int i = 0;
+	for (auto it = DigitP.begin(); it != DigitP.end(); ++it, ++i) {
+	 P_Vect.push_back((*it));
+	 P_Vect[i].second *= P_multipl;
+	}
+	sort(P_Vect.begin(), P_Vect.end(), second_less);
+	reverse(P_Vect.begin(), P_Vect.end());
+	for (int i = 0; i < P_Vect.size(); ++i)
+		control += P_Vect[i].second;
+	cout << endl << "Control:  " << control << "(the sum of the probabilities)" << endl;
+}
+
+double Entropy(vector<data_t> &P) {
+	double sum = 0;
+	for (int i = 0; i < P.size(); ++i)
+		sum += (P[i].second * log(P[i].second) / log(2));
+	sum *= -1;
+	return sum;
+}
+
+double SrDlin(vector<data_t> &P, int *L){
+	double sum = 0;
+	for (int i = 0; i < P.size(); ++i)
+		sum += P[i].second * L[i];
+	return sum;
+}
+
+void CoddingBase() {
+	vector<data_t> P;
+	ReadBase(P);
+	int size = P.size();
+	
+	char **Count_F = new char*[size];
+	int *Lenght_F = new int[size];
+	for (int i = 0; i < size; ++i) {
+		Count_F[i] = new char[30];
+		Lenght_F[i] = 0;
+		for (int j = 0; j < 30; ++j) 
+			Count_F[i][j] = '\0';
+	}
+	Fano(0, size - 1, 1, P, Count_F, Lenght_F);
+	for (int i = 0; i < size; ++i) {
+		cout << P[i].first << "   ";
+		cout << P[i].second << "\t";
+		for (int j = 0; j < 30; ++j) {
+			cout << Count_F[i][j];
+		}
+		cout << "\t" << Lenght_F[i] << endl;
+	}
+	cout << endl << "Entropy:\t" << Entropy(P) << endl;
+	cout << "Average length:\t" << SrDlin(P, Lenght_F) << endl << endl;
+	delete []Lenght_F; 	
+}
 
 int main() {
 	ios_base::sync_with_stdio(false);
@@ -234,7 +366,7 @@ int main() {
 	for (int i = 0; i < N; ++i)
 		ind[i] = &mas[i];
 	auto j = fread((record*)mas, sizeof(record), N, fp);
-	cout << "Choose:" << endl << "1) Print" << endl <<"2) Sort" << endl << "3) Key" << endl << ">> ";
+	cout << "Choose:" << endl << "1) Print" << endl <<"2) Sort" << endl << "3) Key" << endl << "4) Coding" << endl << ">> ";
 	int act;
 	cin >> act;
 	if (act == 1)
@@ -282,5 +414,7 @@ int main() {
 			delQueue(root);
 			delete root;
   		}
+	} else if (act == 4) {
+		CoddingBase();
 	}
 }
